@@ -1,14 +1,14 @@
 import type { HttpContext } from '@adonisjs/core/http'
 
-export default class IsUserMiddleware {
+export default class IsinactiveMiddleware {
   public async handle({ auth, response }: HttpContext, next: () => Promise<void>) {
     try {
       // Obtén el usuario autenticado
       const user = await auth.authenticate()
 
-      // Verifica si el rol del usuario es 2 (Usuario común) o 3 (Administrador)
-      if (user.role_id !== 2 && user.role_id !== 3) {
-        return response.forbidden({ message: 'No tienes permiso para acceder a esta ruta.' })
+      // Verifica si el rol del usuario es 2 (Usuario común)
+      if (user.is_inactive == false) {
+        return response.forbidden({ message: 'Tu cuenta esta desactivada.' })
       }
 
       // Si el rol es correcto, continúa con la solicitud
@@ -17,4 +17,5 @@ export default class IsUserMiddleware {
       return response.unauthorized({ message: 'No estás autorizado.' })
     }
   }
+  
 }

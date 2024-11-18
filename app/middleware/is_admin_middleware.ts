@@ -16,7 +16,7 @@ export default class IsAdminMiddleware {
       await next()
     } catch (error) {
       // Si no está autenticado, devuelve 403 Forbidden
-      return response.forbidden({ message: 'No estás autorizado.' })
+      return response.forbidden({ message: 'No estás autorizado.', error: error.message })
     }
   }
 }

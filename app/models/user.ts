@@ -17,7 +17,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare id: number
 
   @column()
-  declare fullName: string | null
+  declare name: string | null
 
   @column()
   declare email: string
@@ -27,6 +27,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column()
   declare is_active: boolean
+  @column()
+  declare is_inactive: boolean
 
   @column()
   declare profile_image: string

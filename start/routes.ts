@@ -13,62 +13,111 @@ import FileUploadController from '#controllers/file_uploads_controller'
 import AdminController from '#controllers/admin_controller'
 import GameController from '#controllers/games_controller'
 
-router.get('/', async () => {
-  return {
-    hello: 'world',
-  }
-}) // asemos un grupo de rutas para los usuarios autenticados
-router
-  .group(() => {
-    router.post('/imagen', [FileUploadController, 'upload']).as('fileUpload.upload')
-    router.get('/imagen', [FileUploadController, 'ver']).as('fileUpload.ver')
-  })
-  .use(
-    middleware.auth({
-      guards: ['api'],
-    })
-  )
-
 router.post('/register', [AuthController, 'register']).as('auth.register')
 router.post('/login', [AuthController, 'login']).as('auth.login').use(middleware.isActive())
+router.post('/renvio', [AuthController, 'renvio']).as('auth.renvio')
 
-router.get('/activate-account', [AuthController, 'activateAccount']).as('auth.activateAccount')
-router.post('/activate-account', [AuthController, 'renvio']).as('auth.renvio')
 
-router.post('/activar', [AdminController, 'cambiarloajugador']).as('auth.logout').use(middleware.isAdmin())
+    router.get('/', async () => {
+      return {
+        hello: 'world',
+      }
+    }) // asemos un grupo de rutas para los usuarios autenticados
+    router
+      .group(() => {
+        router.post('/imagen', [FileUploadController, 'upload']).as('fileUpload.upload')
+        router.get('/imagen', [FileUploadController, 'ver']).as('fileUpload.ver')
+      })
+      .use(
+        middleware.auth({
+          guards: ['api'],
+        })
+      )
 
-router.post('/game', [GameController, 'createGame']).use(middleware.auth()).use(middleware.isUser())
-router
-  .post('/join/:id', [GameController, 'joinGame'])
-  .where('id', '[0-9]+')
-  .use(middleware.auth())
-  .use(middleware.isUser())
-router
-  .post('/consultar', [GameController, 'Consultar'])
-  .use(middleware.auth())
-  .use(middleware.isUser())
-router
-  .post('/barcos/:id', [GameController, 'placeShips'])
-  .where('id', '[0-9]+')
-  .use(middleware.auth())
-  .use(middleware.isUser())
-router
-  .post('/atacar/:id', [GameController, 'attack'])
-  .where('id', '[0-9]+')
-  .use(middleware.auth())
-  .use(middleware.isUser())
-router
-  .post('/abandonar/:id', [GameController, 'abandonar'])
-  .where('id', '[0-9]+')
-  .use(middleware.auth())
-  .use(middleware.isUser())
+   
 
-router
-  .get('/gamesview', [GameController, 'listGames'])
-  .use(middleware.auth())
-  .use(middleware.isAdmin())
-router
-  .get('/gamesview/:id', [GameController, 'showGame'])
-  .where('id', '[0-9]+')
-  .use(middleware.auth())
-  .use(middleware.isAdmin())
+    router.get('/activate-account', [AuthController, 'activateAccount']).as('auth.activateAccount')
+
+    router
+      .post('/activar', [AdminController, 'cambiarloajugador'])
+      .as('auth.logout')
+      // .use(middleware.auth())
+      // .use(middleware.isAdmin())
+      // .use(middleware.isinactive())
+
+      router
+      .post('/desactivar', [AdminController, 'desactivarjugador'])
+      // .use(middleware.auth())
+      // .use(middleware.isAdmin())
+      // .use(middleware.isinactive())
+
+
+    router
+      .post('/game', [GameController, 'createGame'])
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+    router
+      .post('/join/:id', [GameController, 'joinGame'])
+      .where('id', '[0-9]+')
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+    router
+      .post('/consultar', [GameController, 'Consultar'])
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+    router
+      .post('/barcos/:id', [GameController, 'placeShips'])
+      .where('id', '[0-9]+')
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+    router
+      .post('/atacar/:id', [GameController, 'attack'])
+      .where('id', '[0-9]+')
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+    router
+      .post('/consultaratakes/:id', [GameController, 'consultaratakes'])
+      .where('id', '[0-9]+')
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+    router
+      .post('/partidos', [GameController, 'consultarpartidosdeljugador'])
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+    router
+      .post('/abandonar/:id', [GameController, 'abandonar'])
+      .where('id', '[0-9]+')
+      // .use(middleware.auth())
+      // .use(middleware.isUser())
+      // .use(middleware.isinactive())
+
+
+    router
+      .get('/gamesview', [GameController, 'listGames'])
+      // .use(middleware.auth())
+      // .use(middleware.isAdmin())
+      // .use(middleware.isinactive())
+
+    router
+      .get('/gamesview/:id', [GameController, 'showGame'])
+      .where('id', '[0-9]+')
+      // .use(middleware.auth())
+      // .use(middleware.isAdmin())
+      // .use(middleware.isinactive())
+
+
+

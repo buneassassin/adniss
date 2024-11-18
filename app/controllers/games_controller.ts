@@ -6,17 +6,20 @@ import Ship from '#models/ship'
 import axios from 'axios'
 
 export default class GamesController {
-  public async createGame({ response, auth }: HttpContext) {
-    const user = await auth.authenticate()
-    const userId = user.id
+  public async createGame({ request, response }: HttpContext) {
+    const userid = await request.input('userid')
+
+    const userId = userid
+    console.log(request.all())
     const game = await Game.create({ status: 'waiting', turn: userId })
     return response.status(201).json({ message: 'Game created', game })
   }
 
-  public async joinGame({ params, response, auth }: HttpContext) {
+  public async joinGame({ params, response, request }: HttpContext) {
     const { id } = params
-    const user = await auth.authenticate()
-    const userId = user.id
+    const user = await request.input('userid')
+
+    const userId = user
 
     // Buscar el juego por ID
     const game = await Game.findOrFail(id)
@@ -40,11 +43,12 @@ export default class GamesController {
       })
       game.status = 'waiting'
       await game.save()
-      /* const mensaje = 'Se ha unido el jugador 1 (' + user.fullName + ') al juego: ' + game.id
+      const mensaje = 'Se ha unido el jugador 1 (' + user.name + ') al juego: ' + game.id
+
       await axios.post(
         'https://slack.com/api/chat.postMessage',
         {
-          channel: '#laravel-adonis', // Canal fijo
+          channel: '#informal', // Canal fijo
           text: mensaje, // Mensaje fijo
         },
         {
@@ -53,7 +57,7 @@ export default class GamesController {
             'Content-Type': 'application/json',
           },
         }
-      )*/
+      )
       return response.status(200).json({ message: 'Joined as player 1', game, gameLog })
     }
 
@@ -65,11 +69,11 @@ export default class GamesController {
       // Cambiar el estado del juego a `full` ya que ambos jugadores se han unido
       game.status = 'full'
       await game.save()
-      /*const mensaje = 'Se ha unido el jugador 2 (' + user.fullName + ') al juego: ' + game.id
+      const mensaje = 'Se ha unido el jugador 2 (' + user.name + ') al juego: ' + game.id
       await axios.post(
         'https://slack.com/api/chat.postMessage',
         {
-          channel: '#laravel-adonis', // Canal fijo
+          channel: '#informal', // Canal fijo
           text: mensaje, // Mensaje fijo
         },
         {
@@ -78,7 +82,7 @@ export default class GamesController {
             'Content-Type': 'application/json',
           },
         }
-      )*/
+      )
       return response.status(200).json({ message: 'Joined as player 2', game, gameLog })
     }
 
@@ -88,21 +92,23 @@ export default class GamesController {
   /**
    * Función para elegir posiciones aleatorias para los barcos
    */
-  public async placeShips({ params, request, response, auth }: HttpContext) {
+  public async placeShips({ params, request, response }: HttpContext) {
     const { id } = params // ID del juego
-    const user = await auth.authenticate()
-    const userId = user.id
+    const user = await request.input('userid')
+
+    const userId = user
     // revisamos si el usuaro ya se unio al juego
-    /* const game = await GameLog.findOrFail(id)
-        // Verificar si ambos jugadores se han unido al juego
-        if (!game.jugador1 || !game.jugador2) {
-          return response.status(400).json({ message: 'Falta un jugador' })
-        }
-    
-        // Verificar si el usuario actual es uno de los jugadores
-        if (game.jugador1 !== userId && game.jugador2 !== userId) {
-          return response.status(400).json({ message: 'Tu no estás en el juego' })
-        }*/
+    // const game = await Game.findOrFail(id)
+    const gameLog = await GameLog.query().where('gameId', id).first() // Verificar si ambos jugadores se han unido al juego
+    // Verificar si el usuario es uno de los jugadores
+    if (!gameLog || (gameLog.jugador1 !== user.id && gameLog.jugador2 !== user.id)) {
+      return response.status(400).json({ message: 'Tú no estás en el juego' })
+    }
+
+    // Verificar si el usuario actual es uno de los jugadores
+    if (!gameLog.jugador1 || !gameLog.jugador2) {
+      return response.status(400).json({ message: 'Falta un jugador' })
+    }
 
     // Recibir las posiciones de los barcos desde el cuerpo de la solicitud
     const { ships } = request.only(['ships'])
@@ -152,7 +158,8 @@ export default class GamesController {
   }
   public async attack({ auth, request, response, params }: HttpContext) {
     const { id } = params
-    const user = await auth.authenticate()
+    const user = await request.input('userid')
+
     const { x, y } = request.only(['x', 'y'])
 
     // Buscar el Game y GameLog por ID
@@ -351,6 +358,50 @@ export default class GamesController {
       return response.status(500).json({ message: 'Error al obtener los juegos', error })
     }
   }
+  public async consultaratakes({ params, response, auth }: HttpContext) {
+    const { id } = params
+    const user = await auth.authenticate()
+    const userId = user.id
+    try {
+      const game = await GameLog.query().where('id', id).first()
+      if (!game) {
+        return response.status(404).json({ message: 'Juego no encontrado' })
+      }
+      const atakes = await Attack.query().where('gameId', id)
+
+      if (game.jugador1 !== userId && game.jugador2 !== userId) {
+        return response
+          .status(403)
+          .json({ message: 'No tienes permiso para consultar los ataques' })
+      }
+      // mostramos sollo los tataques del jugador
+      atakes.filter((atack) => atack.attacker_id === userId)
+
+      return response.json({ message: 'Ataques realizados en el juego', atakes })
+    } catch (error) {
+      return response.status(500).json({ message: 'Error al obtener los ataques', error })
+    }
+  }
+  public async consultarpartidosdeljugador({ response, auth }: HttpContext) {
+    const user = await auth.authenticate()
+    const userId = user.id
+    try {
+      const game = await GameLog.query()
+        .where('jugador1', userId)
+        .orWhere('jugador2', userId)
+        .first()
+      if (!game) {
+        return response.status(404).json({ message: 'Juego no encontrado' })
+      }
+      const partidos = await GameLog.query()
+        .where('jugador1', userId)
+        .orWhere('jugador2', userId)
+        .join('games', 'games.id', 'game_logs.gameId')
+      return response.json({ message: 'Partidos del jugador', partidos })
+    } catch (error) {
+      return response.status(500).json({ message: 'Error al obtener los partidos', error })
+    }
+  }
   public async abandonar({ params, response, auth }: HttpContext) {
     const user = await auth.authenticate()
     const userId = user.id
@@ -361,7 +412,7 @@ export default class GamesController {
         return response.status(404).json({ message: 'Juego no encontrado' })
       }
       const gameLog = await GameLog.query().where('gameId', id).first()
-      let userIdwinner: number= 0; // Declare userId
+      let userIdwinner: number = 0 // Declare userId
       if (gameLog) {
         if (gameLog.jugador1 === userId) {
           userIdwinner = gameLog.jugador2
@@ -369,13 +420,25 @@ export default class GamesController {
           userIdwinner = gameLog.jugador1
         }
       } else {
-        // Handle the case where gameLog is null
-        return response.status(404).json({ message: 'Game log not found' })
+        return response.status(404).json({ message: 'Juego no encontrado' })
       }
       game.winner = userIdwinner
       game.status = 'abandoned'
       await game.save()
-
+      const mensaje = `Juego abandonado, jugador ${userIdwinner} ha ganado`
+      await axios.post(
+        'https://slack.com/api/chat.postMessage',
+        {
+          channel: '#laravel-adonis', // Canal fijo
+          text: mensaje, // Mensaje fijo
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${process.env.SLACK_TOKE}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
       return response.json({ message: 'Juego abandonado', game })
     } catch (error) {
       return response.status(500).json({ message: 'Error al abandonar el juego', error })

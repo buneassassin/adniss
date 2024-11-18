@@ -7,7 +7,7 @@ import axios from 'axios'
 
 export default class AuthController {
   public async register({ request, response }: HttpContext) {
-    /*const name = request.input('name')
+    const name = request.input('name')
     const email = request.input('email')
     const password = request.input('password')
     // verificamos si el correo ya esta registrado
@@ -18,19 +18,13 @@ export default class AuthController {
 
     const activationToken = crypto.randomUUID()
     await User.create({
-      fullName: name,
+      name: name,
       email,
       password,
       activation_token: activationToken,
     })
     const activationLink = `http://${process.env.HOST}:3336/activate-account?token=${activationToken}`
-    /*await Mail.send((message) => {
-      message
-        .to(email)
-        .from('info@example.org')
-        .subject('Verify your email address')
-        .htmlView('emails/verify_email_html', { activationLink })
-    })
+
     await Mail.send((message) => {
       message.to(email).from('info@example.org').subject('Verify Your Email Address').html(`
           <html>
@@ -50,15 +44,11 @@ export default class AuthController {
     })
 
     // Enviar el correo de activación
-    /*    await Mail.send(new VerifyENotification({
-      email: user.email,
-      activation_token: user.activation_token,
-    }))
 
     return response.ok({
       message: 'Registro exitoso. Por favor, revisa tu correo para verificar tu cuenta.',
-    })*/
-
+    })
+/*
     const name = request.input('name')
     const email = request.input('email')
     const password = request.input('password')
@@ -87,23 +77,18 @@ export default class AuthController {
       return response.status(error.response ? error.response.status : 500).send({
         message: error.response ? error.response.data : error.message,
       })
-    }
+    }*/
   }
 
   public async login({ request, response }: HttpContext) {
     const { email, password } = await request.validateUsing(loginValidator)
 
     try {
-        
-      //  const user = await User.verifyCredentials(email, password)
-      //return User.accessTokens.create(user)
-      const user = await axios.post(`${process.env.API}/api/login`, {
-        email: email,
-        password: password,
-      })
-      return response.json(user.data) // Respuesta correcta del usuario
+      const user = await User.verifyCredentials(email, password)
+      return User.accessTokens.create(user)
+    
     } catch (error) {
-      return response.unauthorized({ message: 'Credenciales incorrectas' })
+      return response.unauthorized({ message: 'Credenciales incorrectas.' })
     }
   }
 
@@ -133,10 +118,10 @@ export default class AuthController {
               <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
                 <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                   <h2 style="color: #007bff; text-align: center;">Cuenta Activada</h2>
-                  <p style="font-size: 16px; line-height: 1.6;">La cuenta del usuario ${user.fullName} ha sido activada exitosamente.</p>
+                  <p style="font-size: 16px; line-height: 1.6;">La cuenta del usuario ${user.name} ha sido activada exitosamente.</p>
                   <p style="font-size: 16px; line-height: 1.6;">Detalles del usuario:</p>
                   <ul>
-                    <li><strong>Nombre:</strong> ${user.fullName}</li>
+                    <li><strong>Nombre:</strong> ${user.name}</li>
                     <li><strong>Email:</strong> ${user.email}</li>
                     <li><strong>Fecha de Activación:</strong> ${new Date().toLocaleString()}</li>
                   </ul>
@@ -153,7 +138,7 @@ export default class AuthController {
     }
   }
   public async renvio({ response, request }: HttpContext) {
-    /* const email = request.input('email')
+    const email = request.input('email')
 
     // Generar un nuevo token de activación
     const activationToken = crypto.randomUUID()
@@ -186,14 +171,23 @@ export default class AuthController {
     })
     return response.ok({
       message: 'Reenviado exitoso. Por favor, revisa tu correo para verificar tu cuenta.',
-    })*/
-    const result = await axios.post(
-      'https://d0cb-2806-101e-b-73f5-d920-d643-a77b-d371.ngrok-free.app/api/activation-link',
-      {
-        email: request.input('email'),
-      }
-    )
+    })
+    /*const email = request.input('email')
+
+    //vereficamos si el correo electronico existe
+    const user = await User.findByOrFail('email', email)
+    if (!user) {
+      return response.badRequest({ message: 'Cuenta no encontrada' })
+    }
+    //veficamos si es true el is_inactive
+    if (user.is_inactive==false) {
+      return response.badRequest({ message: 'Cuenta desactivada' })
+    }
+    const result = await axios.post(`${process.env.API}/api/activation-link`, {
+      email: request.input('email'),
+    })
 
     return response.ok(result.data)
+  }*/
   }
 }

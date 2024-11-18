@@ -38,4 +38,5 @@ export const middleware = router.named({
   isAdmin: () => import('#middleware/is_admin_middleware'),
   isUser: () => import('#middleware/is_user_middleware'),
   isActive: () => import('#middleware/is_active_middleware'),
+  isinactive: () => import('#middleware/is_active_middleware'),
 })

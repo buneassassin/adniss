@@ -20,4 +20,21 @@ export default class AdminController {
     await user.save()
     return response.json({ message: 'Cuenta cambiada a jugador' })
   }
+  public async desactivarjugador({ request, response }: HttpContext) {
+    const email = request.input('email')
+    //verificamos si el correo existe
+    const user = await User.findBy('email', email)
+    if (!user) {
+      return response.badRequest({ message: 'Cuenta no encontrada' })
+    }
+   
+    //verficamos si el usuario es un admin
+    if (user.role_id == 3) {
+      return response.badRequest({ message: 'El usuario es un admin' })
+    }
+    user.is_active=false
+    user.is_inactive=false
+    await user.save()
+    return response.json({ message: 'Cuenta desactivada' })
+  }
 }

@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.string('password').notNullable()
       table.integer('role_id').unsigned().references('id').inTable('roles').defaultTo(1)
       table.boolean('is_active').defaultTo(false)
+      table.boolean('is_inactive').defaultTo(true)
       table.string('activation_token').nullable()
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()
