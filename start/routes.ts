@@ -13,9 +13,9 @@ import FileUploadController from '#controllers/file_uploads_controller'
 import AdminController from '#controllers/admin_controller'
 import GameController from '#controllers/games_controller'
 
-router.post('/register', [AuthController, 'register']).as('auth.register')
-router.post('/login', [AuthController, 'login']).as('auth.login').use(middleware.isActive())
-router.post('/renvio', [AuthController, 'renvio']).as('auth.renvio')
+router.post('/api/v1/register', [AuthController, 'register']).as('auth.register')
+router.post('/api/v1/login', [AuthController, 'login']).as('auth.login').use(middleware.isActive())
+router.post('/api/v1/renvio', [AuthController, 'renvio']).as('auth.renvio')
 
 
     router.get('/', async () => {
